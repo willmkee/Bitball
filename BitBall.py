@@ -53,16 +53,28 @@ while True:
                         self.DMAG = C.fetchone()[0]
                         self.keeper = keeper
                         (C.execute("SELECT gk_mod FROM players WHERE name =:name",{"name":self.name}))
+                        self.inv = []
                         self.GK = C.fetchone()[0]
                         self.ini = dice_roll(20)+self.DEX
-                        self.X = 0
-                        self.Y = 0
+                        self.HP = 10
+
+                def takedmg(self):
+                        self.HP -= 5
+                        if "cursed item" in self.inv:
+                                print ("A curse haunts",self.name)
+                                self.hp -=2
+                        if self.HP <=0:
+                                print (self.name, "is gravely injured!")
+                        print()
+                        if self.HP > 0:
+                                print (self.name,"HP: ",self.HP)
+
 
         class Team1:
-                name = "Rari Whales"
+                name = "Chainlink Frogs"
 
         class Team2:
-                name = "Fractional NFT"
+                name = "Compound Dragons"
 
         newlist=[]
         loopcount=0
@@ -93,21 +105,30 @@ while True:
 
         #Creates 10 named players
 
-        P1 = Player("Sharn'blort",True,"olympus_omegas")
-        P2 = Player("Ptolemy Crass",False,"olympus_omegas")
-        P3 = Player("Cristiana",False,"olympus_omegas")
-        P4 = Player("Martin Murray",False,"olympus_omegas")
-        P5 = Player("Tanner Dulce",False,"olympus_omegas")
+        P1 = Player("Tamara Edison",True,"olympus_omegas")
+        P2 = Player("Borjo Blozok",False,"olympus_omegas")
+        P3 = Player("Gauchinho",False,"olympus_omegas")
+        P4 = Player("Sylvia Trask",False,"olympus_omegas")
+        P5 = Player("Talia Jeffers",False,"olympus_omegas")
          
-        P6 = Player("Secundus Senior",True,"olympus_omegas")
-        P7 = Player("Shiva Moss",False,"olympus_omegas")
-        P8 = Player("Dooley Tarver",False,"olympus_omegas")
-        P9 = Player("Roger",False,"olympus_omegas")
-        P10 = Player("Gando'blort",False,"olympus_omegas")
+        P6 = Player("Daisuke Sato",True,"olympus_omegas")
+        P7 = Player("Paro'blort",False,"olympus_omegas")
+        P8 = Player("Tad Garbaj",False,"olympus_omegas")
+        P9 = Player("Thankful Tenniford",False,"olympus_omegas")
+        P10 = Player("Horus Shelp",False,"olympus_omegas")
+
+
+        # BenchA =[Player("GhostA1",False,"TeamA"),
+        #         Player("GhostA2", False, "TeamA")]
+        # BenchB =[Player("GhostB1",False, "TeamB"),
+        #         Player("GhostB2",False,"TeamB")]
+
         #Puts them onto TeamA
+
 
         TeamA = [P1.name,P2.name,P3.name,P4.name,P5.name]
         PTeamA = [P1,P2,P3,P4,P5]
+
 
         for Player in PTeamA:
                 if Player.keeper == True:
@@ -120,6 +141,8 @@ while True:
         for Player in PTeamB:
                 if Player.keeper == True:
                         KeeperB = Player
+
+        
 
         #start defining the game
         def gameloop():
@@ -158,12 +181,15 @@ while True:
                         (P9,P9.name,P9.ini),
                         (P10,P10.name,P10.ini),]
                 Ordered = sorted(Order, key=lambda player: player[2])
+                #print (Ordered)
                 for player in Ordered: 
                         if player[1] in TeamA:
                                 T1order.append(player[1])
                 for player in Ordered: 
                         if player[1] in TeamB:
                                 T2order.append(player[1])
+                                        
+                
 
         #Unpacks first and last tuple in "Ordered" list       
 
@@ -214,7 +240,6 @@ while True:
                                         T2order.append(player[1])
 
 
-
                 #Unpacks first and last tuple in "Ordered" list       
 
                         (player1,firstname,firstini)=Ordered[9]
@@ -228,6 +253,24 @@ while True:
                         (player9,ninthame,ninthini)=Ordered[1]
                         (player10,lastname, lastini)=Ordered[0]
 
+                def loot():
+                        print(player1.name,"looks around for loot...")
+                        print()
+                        time.sleep(1)
+                        lootroll = dice_roll(20)
+                        if lootroll == 20:
+                                P1.inv += "small item"
+                                print ("...and found something.")
+                                time.sleep(1)
+                        elif lootroll == 1:
+                                P1.inv += "cursed item"
+                                time.sleep(1)
+                                print ("...and didn't like what they found.")
+                        else:
+                                print("...but found nothing.")
+                                time.sleep(1)
+                                print()
+                
 
                 #defines a function that calls a penalty shot to occur
                 def penalty():
@@ -415,6 +458,9 @@ while True:
                         global silence
                         global Player
                         
+                        #Checks length of newlist. If all players have appeared in text and have been added to newlist, starts a new round.
+                        #Additionally, Players now look for loot at the beginning of each new round.
+
                         if len(newlist)>=10:
                                 newlist=[]
                                 getini()
@@ -422,6 +468,20 @@ while True:
                                 #New round console check
                                 #print("IT'S A NEW ROUND!")
                                 time.sleep(2)
+                                loot()
+
+                        for player in PTeamA:
+                                if Player.HP <= 0:
+                                        player.DEX = -99
+                                                
+                                                
+
+                        for player in PTeamB:
+                                if Player.HP <= 0:
+                                        player.DEX = -99
+
+                        #Checks for team possession
+
                         if pos == ['TeamA']:
                                 while player1.name not in TeamA:
                                                 Ordered.pop(9)
@@ -434,16 +494,22 @@ while True:
                                                 Ordered.insert(0,0,)
                                                 return Ordered
                                 pos = []
+
+                        #Checks for keeper to "make sure they stay in their ring" (don't appear in text making plays)
+                                
                         if player1.keeper == True or player2.keeper==True:
                                 if player1.name not in newlist:
                                         newlist.append(player1.name)
                                 Ordered.pop()
                                 return Ordered
 
+                        #Conditions for tackles and fouls to occur
+
                         if player2.DMAG + dice_roll(20) > player1.WIS+dice_roll(20):
                                 print()
                                 print(player1.name,"gets tackled by",player2.name,"and loses the ball!")
                                 time.sleep(1)
+                                player1.takedmg()
                                 print()
                                 print("Hard to believe the referee let them get away with that one...")
                                 time.sleep(1.5)
@@ -461,6 +527,7 @@ while True:
                                         time.sleep(2)
                                         pos=[]
                                         pos.append("TeamB")
+
                                 elif player10.name in TeamA:
                                         print()
                                         print(Team1.name,"have the ball!")
@@ -481,6 +548,7 @@ while True:
                                         time.sleep(2)
                                         print()
                                         print("Some obvious roughing from",player2.name,"results in a foul.")
+                                        player1.takedmg()
                                         time.sleep(2)
                                         if player2.name in TeamA:
                                                 FoulA+=1
@@ -500,6 +568,12 @@ while True:
                                         if FoulB==3:
                                                 penalty()
                                                 FoulB=0
+
+                        #Huge set of conditions for different passing outcomes
+                        #This first set is a successful pass to a teammate.
+                        #It's followed by a bunch of code that checks the team's pass counter, and if the team makes four 
+                        #successful passes, the receiving Player of the fourth pass takes a shot.
+                        #I should have made all of that into a function because I call it a lot, but I didn't and here we are.
 
                         if player1.STR+dice_roll(20) >= player2.STR+dice_roll(20): 
                                 print()
@@ -584,7 +658,7 @@ while True:
                                                 time.sleep(2)
                                                 if TeamBPass == 4:
                                                         print()
-                                                        print (player3.name,"takes a shot!")
+                                                        print (player3.name,"sends it!")
                                                         time.sleep(2)
                                                         print()
                                                         print("The",Team1.name,"keeper braces.")
@@ -641,6 +715,8 @@ while True:
                                                                 print("The ",Team1.name,"keeper blocks the shot!")
                                                                 TeamBPass=0
                                                                 time.sleep(2)
+
+                                        #Interceptions occur when a pass happens and a player from the opposing team is in the receiving position
                                                         
                                         elif player1.name in TeamA and player3.name in TeamB:
                                                 TeamBPass+=1
@@ -778,7 +854,9 @@ while True:
                                                                 print("The ",Team2.name,"keeper blocks the shot!")
                                                                 TeamAPass=0
                                                                 time.sleep(2)                              
-                                                
+                                
+                                #If neither a successful pass or an interception occur, the ball is fumbled.
+
                                 else:
                                         print()
                                         print(thirdname,"attempts a catch but fumbles the ball!")
@@ -787,10 +865,21 @@ while True:
                                                 print()
                                                 print(player4.name,"recovers the ball!")
                                                 time.sleep(2)
+                                                pos = []
+                                                if player4.name in TeamA:
+                                                        pos.append('TeamA')
+                                                else:
+                                                        pos.append('TeamB')
+
                                         else:
                                                 print()
                                                 print(player4.name,"grabs the live ball!")
                                                 time.sleep(2)
+                                                pos = []
+                                                if player4.name in TeamA:
+                                                        pos.append('TeamA')
+                                                else:
+                                                        pos.append('TeamB')
 
                                 if player1.name not in newlist:
                                         newlist.append(player1.name)
@@ -798,6 +887,8 @@ while True:
                                         newlist.append(player2.name)
                                 if player3.name not in newlist:
                                         newlist.append(player3.name)
+
+                        #This condition occurs when Player 1 fails the strength test against Player 2
                         
                         else: 
                                 print()
@@ -821,6 +912,8 @@ while True:
                                         die1=dice_roll(4)
                                         die2=dice_roll(4)
                                         Gifted = [PTeamA[die1],PTeamB[die2]]
+
+                                        #Implementation of Captains. Could do more here if Captain attribute was actually assigned to a specific player on each team.
 
                                         for Player in Gifted:
                                                 wheel = ["X",Player.STR,Player.DEX,Player.WIS,Player.CHA,Player.MAG,Player.DMAG]
@@ -862,6 +955,10 @@ while True:
                                         silence = 0
                                 
                                 gameloop()
+
+                        #Sets up conditions for surprise shots on the opponent's ring
+                        #When a team has a player in the first and second initiative position, they get a point
+                        #When a team has three of these points, the player in the second position takes a surprise shot of opportunity
 
                         if player1.name in TeamA and player2.name in TeamA:
                                         if Aruncount==0:
@@ -941,7 +1038,8 @@ while True:
                                                         time.sleep(2)
                                                 Aruncount=0
                         
-                                
+                        
+                        #Same code but for Team B        
 
                         elif player1.name in TeamB and player2.name in TeamB:
                                         if Bruncount==0:
@@ -1019,6 +1117,7 @@ while True:
                                                         TeamBPass=0
                                                         time.sleep(2)
                                                 Bruncount=0
+
                         if player1.name not in newlist:
                                 newlist.append(player1.name)
                         if player2.name not in newlist:
@@ -1026,25 +1125,22 @@ while True:
                         if player3.name not in newlist:
                                 newlist.append(player3.name)
                                         
+                        
+                        #Ensures that players don't tackle other players on their team   
 
-                        
-                        
-                        #Ensures that players don't tackle other players on their team        
                         while player1.name in TeamA and player2.name in TeamA:
                                 Ordered.pop(8)
                                 Ordered.insert(0,0,)
                                 return Ordered
                         #print()
                         
-                        
                         while player1.name in TeamB and player2.name in TeamB:
                                 Ordered.pop(8)
                                 Ordered.insert(0,0,)
                                 return Ordered
-                    
-                        
+                
 
-                        
+                        #Ensures players that appeared in this text loop are counted as having taken a turn (moved to newlist)
 
                         if player1.name not in newlist:
                                 newlist.append(player1.name)
@@ -1059,8 +1155,7 @@ while True:
                 ScoreA=ScoreA
                 ScoreB=ScoreB         
 
-        #Creates loop that calls gameloop() for x amount of seconds and print()
-        #prints the final score when game time runs out
+        #Creates loop that calls gameloop() for x amount of seconds and prints the final score when game time runs out
         game = True
         this=False
         half=True
@@ -1076,8 +1171,11 @@ while True:
                                         print()
                                         print(round(seconds-elapsed_time))
 
+                # HALF TIME! HALF TIME! HALF TIME! (This makes Half Time work)
+
                 if elapsed_time >= 585 and elapsed_time <= 615:
                         half=True
+
                 while half==True:
                         
                         print()
@@ -1104,14 +1202,12 @@ while True:
 
                                 if count <= 0:
                                         half=False
-                                        gameloop()
-                                        
-                                                        
-                                                
+                                        gameloop()      
                                                         
 
                 gameloop()
                 
+                #Prints score and winning team at the end of the game time. Counts 30 seconds and then starts a new game.
 
                 if elapsed_time>seconds:
                         print()
