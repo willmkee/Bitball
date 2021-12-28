@@ -6,15 +6,20 @@ while True:
         conn=sqlite3.connect('player_database.db')
         C=conn.cursor()
 
-        #print()
-        #print("Please enter the name of the first team: ")
-        #Team1name = input()
-        #print()
-        #print("Please enter the name of the second team: ")
-        #Team2name = input()
+        teams=['Aave Ghosts','Alchemix Conjurers','Abracadabra Wizards','Olympus Omegas','Uniswap Unicorns','Convex Curves','Compund Dragons','Chainlink Frogs','Rari Whales','Fractional NFT']
+
+        # print()
+        # print("Please enter the name of the first team: ")
+        # Team1name = input()
+        Team1name = "Rari Whales"
 
 
-          
+        # print()
+        # print("Please enter the name of the second team: ")
+        # Team2name = input()
+        Team2name = "Fractional NFT"
+
+                
 
         #Define dice_roll function that accepts one argument that is equal to number of sides on dice rolled
 
@@ -34,11 +39,15 @@ while True:
         #         stat = stat[0]+stat[1]+stat[2]
         #         return stat
                 
+        #List containing names of players that have dropped to 0 HP
+                
         #Create superclass Player
         class Player:
-                def __init__(self, name, keeper, team):
-                        self.name = name
+                def __init__(self,keeper,refnum,team):
+                        self.refnum = refnum
                         self.team = team
+                        (C.execute("SELECT name FROM players WHERE team=:team GROUP BY name HAVING refnum=:refnum",{"team":self.team,"refnum":self.refnum}))
+                        self.name = C.fetchone()[0]
                         (C.execute("SELECT str_mod FROM players WHERE name =:name",{"name":self.name}))
                         self.STR = C.fetchone()[0]
                         (C.execute("SELECT dex_mod FROM players WHERE name =:name",{"name":self.name}))
@@ -53,28 +62,132 @@ while True:
                         self.DMAG = C.fetchone()[0]
                         self.keeper = keeper
                         (C.execute("SELECT gk_mod FROM players WHERE name =:name",{"name":self.name}))
-                        self.inv = []
                         self.GK = C.fetchone()[0]
                         self.ini = dice_roll(20)+self.DEX
-                        self.HP = 10
+                        self.HP = 100
+                        self.inv = []
+                        self.graveyard = False
 
                 def takedmg(self):
                         self.HP -= 5
                         if "cursed item" in self.inv:
+                                print()
                                 print ("A curse haunts",self.name)
-                                self.hp -=2
+                                self.HP -=2
                         if self.HP <=0:
                                 print (self.name, "is gravely injured!")
+                                self.graveyard = True
+
                         print()
                         if self.HP > 0:
                                 print (self.name,"HP: ",self.HP)
+        swingcount = 0
+
+        def fight(fighter1,fighter2):
+                print()
+                print("A fight has broken out in the BitBall pit between ",fighter1.name," and ",fighter2.name,"!")
+                time.sleep(2)
+                global swingcount
+                while swingcount < 10:
+
+                        if fighter2.HP < fighter1.HP:
+                                def swing():
+                                        global swingcount
+                                        swingcount = swingcount
+                                        swing = dice_roll(20) + fighter2.STR + fighter2.WIS + fighter2.DEX
+                                        swingcount +=1
+                                        if swing >= 15:
+                                                
+                                                print()
+                                                print(fighter1.name," takes a nasty hit.")
+                                                time.sleep(.5)
+                                                fighter1.takedmg()
+                                        else:
+                                
+                                                if swing < 15 and swing > 10:
+                                                        print()
+                                                        print(fighter2.name," grazes ",fighter1.name,".")
+                                                        time.sleep(.5)
+                                                        
+                                                elif swing < 10 and swing > 5:
+                                                        print()
+                                                        print(fighter1.name," quickly dodges an attack!")
+                                                        time.sleep(.5)
+                                                        
+
+                                                elif swing < 5 and swing > 0:
+                                                        print()
+                                                        print(fighter2.name,"'s fists meet the air.")
+                                                        time.sleep(.5)
+                                                        
+                                                else:
+                                                        print()
+                                                        print("A weak attempt by ",fighter2.name,".")
+                                                        time.sleep(.5)
+                                                        
+                                swing()
+                                def combo():
+                                        coin = dice_roll(2)
+                                        if coin == 1:
+                                                swing()
+                                                
+                                combo()
+                                combo()
+
+
+                        else:
+                                def swing():
+                                        global swingcount
+                                        swingcount = swingcount
+                                        swing = dice_roll(20) + fighter1.STR + fighter1.WIS + fighter1.DEX
+                                        swingcount +=1
+                                        if swing > 15:
+                                                print()
+                                                print(fighter2.name," takes a nasty hit.")
+                                                time.sleep(.5)
+                                                fighter2.takedmg()
+                                        else:
+                                                if swing < 15 and swing > 10:
+                                                        print()
+                                                        print(fighter1.name," grazes ",fighter2.name,".")
+                                                        time.sleep(.5)
+                                                elif swing < 10 and swing > 5:
+                                                        print()
+                                                        print(fighter2.name," quickly dodges an attack!")
+                                                        time.sleep(.5)
+
+                                                elif swing < 5 and swing > 0:
+                                                        print()
+                                                        print(fighter1.name,"'s fists meet the air.")
+                                                        time.sleep(.5)
+                                                else:
+                                                        print()
+                                                        print("A weak attempt by ",fighter1.name,".")
+                                                        time.sleep(.5)
+                                swing()
+                                def combo():
+                                        coin = dice_roll(2)
+                                        if coin == 1:
+                                                swing()
+                                combo()
+                                combo()
+
+                if swingcount >= 10:
+                        print ()
+                        print ("The bloodied players return to the game.")
+                        time.sleep(2)
+                        swingcount = 0
+
+
 
 
         class Team1:
-                name = "Chainlink Frogs"
+                name = Team1name
 
         class Team2:
-                name = "Compound Dragons"
+                name = Team2name
+
+
 
         newlist=[]
         loopcount=0
@@ -105,23 +218,17 @@ while True:
 
         #Creates 10 named players
 
-        P1 = Player("Tamara Edison",True,"olympus_omegas")
-        P2 = Player("Borjo Blozok",False,"olympus_omegas")
-        P3 = Player("Gauchinho",False,"olympus_omegas")
-        P4 = Player("Sylvia Trask",False,"olympus_omegas")
-        P5 = Player("Talia Jeffers",False,"olympus_omegas")
+        P1 = Player(True,1,Team1name)
+        P2 = Player(False,2,Team1name)
+        P3 = Player(False,3,Team1name)
+        P4 = Player(False,4,Team1name)
+        P5 = Player(False,5,Team1name)
          
-        P6 = Player("Daisuke Sato",True,"olympus_omegas")
-        P7 = Player("Paro'blort",False,"olympus_omegas")
-        P8 = Player("Tad Garbaj",False,"olympus_omegas")
-        P9 = Player("Thankful Tenniford",False,"olympus_omegas")
-        P10 = Player("Horus Shelp",False,"olympus_omegas")
-
-
-        # BenchA =[Player("GhostA1",False,"TeamA"),
-        #         Player("GhostA2", False, "TeamA")]
-        # BenchB =[Player("GhostB1",False, "TeamB"),
-        #         Player("GhostB2",False,"TeamB")]
+        P6 = Player(True,1,Team2name)
+        P7 = Player(False,2,Team2name)
+        P8 = Player(False,3,Team2name)
+        P9 = Player(False,4,Team2name)
+        P10 = Player(False,5,Team2name)
 
         #Puts them onto TeamA
 
@@ -142,7 +249,11 @@ while True:
                 if Player.keeper == True:
                         KeeperB = Player
 
-        
+        # BenchA =[Player("GhostA1",False,Team1name),
+        #         Player("GhostA2", False, Team1name)]
+        # BenchB =[Player("GhostB1",False, Team2name)],
+        #         Player("GhostB2",False,Team2name)]
+
 
         #start defining the game
         def gameloop():
@@ -251,25 +362,38 @@ while True:
                         (player7,seventhname,seventhini)=Ordered[3]
                         (player8,eighthname,eightini)=Ordered[2]
                         (player9,ninthame,ninthini)=Ordered[1]
-                        (player10,lastname, lastini)=Ordered[0]
+                        (player10,lastname, lastini)=Ordered[0] 
 
                 def loot():
+                        print()
                         print(player1.name,"looks around for loot...")
                         print()
                         time.sleep(1)
                         lootroll = dice_roll(20)
                         if lootroll == 20:
-                                P1.inv += "small item"
+                                inventory = player1.inv
+                                if "small item" not in inventory:
+                                        inventory.append("small item")
+                                print(player1.inv)
                                 print ("...and found something.")
                                 time.sleep(1)
                         elif lootroll == 1:
-                                P1.inv += "cursed item"
+                                inventory = player1.inv
+                                if "cursed item" not in inventory:
+                                        inventory.append("cursed item")
+                                print(player1.inv)
                                 time.sleep(1)
                                 print ("...and didn't like what they found.")
                         else:
                                 print("...but found nothing.")
                                 time.sleep(1)
-                                print()
+                                
+
+                #Will define a function that compares teams' weighted stats and pits 
+                #them against each other in a struggle *
+
+                def war():
+                     print ("!WAR!")   
                 
 
                 #defines a function that calls a penalty shot to occur
@@ -460,37 +584,33 @@ while True:
                         
                         #Checks length of newlist. If all players have appeared in text and have been added to newlist, starts a new round.
                         #Additionally, Players now look for loot at the beginning of each new round.
-
                         if len(newlist)>=10:
                                 newlist=[]
                                 getini()
-                                print()
+                                #print()
                                 #New round console check
                                 #print("IT'S A NEW ROUND!")
                                 time.sleep(2)
                                 loot()
 
-                        for player in PTeamA:
-                                if Player.HP <= 0:
-                                        player.DEX = -99
-                                                
-                                                
-
-                        for player in PTeamB:
-                                if Player.HP <= 0:
-                                        player.DEX = -99
+                        #Checks for players with 0 HP and removes them from the initiative ordering list (Ordered)
+                        for player in Ordered:
+                                if player[0].graveyard == True:
+                                        if player[0].name not in newlist:
+                                                newlist.append(player[0].name)
+                                        Ordered.remove(player)
 
                         #Checks for team possession
 
                         if pos == ['TeamA']:
                                 while player1.name not in TeamA:
-                                                Ordered.pop(9)
+                                                Ordered.pop()
                                                 Ordered.insert(0,0,)
                                                 return Ordered
                                 pos = []
                         if pos == ['TeamB']:
                                 while player1.name not in TeamB:
-                                                Ordered.pop(9)
+                                                Ordered.pop()
                                                 Ordered.insert(0,0,)
                                                 return Ordered
                                 pos = []
@@ -513,6 +633,9 @@ while True:
                                 print()
                                 print("Hard to believe the referee let them get away with that one...")
                                 time.sleep(1.5)
+                                dice = dice_roll(8)
+                                if dice == 8:
+                                        fight(player1,player2)
                                 if player2.name in TeamA:
                                         print()
                                         print(Team1.name,"have the ball!")
@@ -542,32 +665,32 @@ while True:
                                         pos=[]
                                         pos.append("TeamB")
                                         
-                                if player2.STR+dice_roll(20) > player1.WIS+dice_roll(20): 
+                        elif player2.STR+dice_roll(20) > player1.WIS+dice_roll(20): 
+                                print()
+                                print("* S M A S H *")
+                                time.sleep(2)
+                                print()
+                                print("Some obvious roughing from",player2.name,"results in a foul.")
+                                player1.takedmg()
+                                time.sleep(2)
+                                if player2.name in TeamA:
+                                        FoulA+=1
                                         print()
-                                        print("* S M A S H *")
-                                        time.sleep(2)
+                                        #Foul console check
+                                        #print(Team1.name,"Fouls: ",FoulA)
+                                        time.sleep(1)
+                                else:
+                                        FoulB+=1
                                         print()
-                                        print("Some obvious roughing from",player2.name,"results in a foul.")
-                                        player1.takedmg()
-                                        time.sleep(2)
-                                        if player2.name in TeamA:
-                                                FoulA+=1
-                                                print()
-                                                #Foul console check
-                                                #print(Team1.name,"Fouls: ",FoulA)
-                                                time.sleep(1)
-                                        else:
-                                                FoulB+=1
-                                                print()
-                                                #Foul console check
-                                                #print(Team2.name,"Fouls: ",FoulB)
-                                                time.sleep(1)
-                                        if FoulA==3:
-                                                penalty()
-                                                FoulA=0
-                                        if FoulB==3:
-                                                penalty()
-                                                FoulB=0
+                                        #Foul console check
+                                        #print(Team2.name,"Fouls: ",FoulB)
+                                        time.sleep(1)
+                                if FoulA==3:
+                                        penalty()
+                                        FoulA=0
+                                if FoulB==3:
+                                        penalty()
+                                        FoulB=0
 
                         #Huge set of conditions for different passing outcomes
                         #This first set is a successful pass to a teammate.
@@ -585,7 +708,6 @@ while True:
                                         time.sleep(1)
                                         if player1.name in TeamA and player3.name in TeamA:
                                                 TeamAPass+=1
-                                                print()
                                                 #Pass Count console check
                                                 #print(Team1.name, "pass count = ",TeamAPass)
                                                 time.sleep(2)
@@ -652,7 +774,6 @@ while True:
                                         elif player1.name in TeamB and player3.name in TeamB:
                                                 
                                                 TeamBPass+=1
-                                                print()
                                                 #Pass Count console check
                                                 #print(Team2.name,"pass count = ",TeamBPass)
                                                 time.sleep(2)
@@ -855,7 +976,7 @@ while True:
                                                                 TeamAPass=0
                                                                 time.sleep(2)                              
                                 
-                                #If neither a successful pass or an interception occur, the ball is fumbled.
+                                #If neither a successful pass nor interception occur, the ball is fumbled.
 
                                 else:
                                         print()
@@ -1117,13 +1238,6 @@ while True:
                                                         TeamBPass=0
                                                         time.sleep(2)
                                                 Bruncount=0
-
-                        if player1.name not in newlist:
-                                newlist.append(player1.name)
-                        if player2.name not in newlist:
-                                newlist.append(player2.name)
-                        if player3.name not in newlist:
-                                newlist.append(player3.name)
                                         
                         
                         #Ensures that players don't tackle other players on their team   
@@ -1235,7 +1349,7 @@ while True:
                         print(count)
                         if count <= 0:
                                 print()
-                                print ('Well, I guess that''s tipoff')
+                                print ("Well, I guess that's tipoff")
                                 time.sleep(2)
                                 this =False
                                 seconds = 1200
